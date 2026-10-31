@@ -14,6 +14,7 @@ internal static class CaptureNetworkSmoke
     internal static async Task Run(string output)
     {
         var settingsBefore = File.Exists(Preferences.FilePath) ? File.ReadAllBytes(Preferences.FilePath) : null;
+        await WindowPlacementSmoke.Run(output);
         await PinnedImageSmoke.Run(output);
         var shell = new ShellViewModel(false, SystemSettingsSmoke.CreateRegistration());
         var window = new MainWindow(shell, false) { WindowStartupLocation = WindowStartupLocation.Manual, Left = -16000, Top = 0, ShowActivated = false, ShowInTaskbar = false };

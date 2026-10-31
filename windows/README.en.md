@@ -61,6 +61,8 @@ Built with **.NET 10 + WPF + MVVM**. Light theme by default, with a dark theme a
 
 **Portable build:** Extract `LinkLab-<version>-win-x64.zip` and run `LinkLab.exe` inside the extracted folder. Keep the entire folder together.
 
+On first display, the main window fits and centers within the available area of the screen under the pointer, accounting for display scaling and the taskbar. Small screens also lower the minimum size. You can then move or resize it; restoring from the tray preserves your current layout.
+
 **Visual Studio development:** Use the latest stable **Visual Studio 2026**.
 
 1. Install the **.NET desktop development** workload in Visual Studio Installer and ensure the **.NET 10 SDK** is installed. The runtime alone cannot build the project.

@@ -12,7 +12,14 @@ public partial class MainWindow : Window
     public MainWindow(ShellViewModel vm, bool save)
         : this(vm, () => vm.Close(save)) { }
     internal MainWindow(ShellViewModel vm, Func<Task> closeSession)
-    { InitializeComponent(); _vm = vm; _closeSession = closeSession; DataContext = vm; Closing += OnClosing; }
+    {
+        InitializeComponent(); _vm = vm; _closeSession = closeSession; DataContext = vm; Closing += OnClosing;
+        SourceInitialized += (_, _) =>
+        {
+            // Explicit manual positioning (including verification windows) takes precedence.
+            if (WindowStartupLocation == WindowStartupLocation.CenterScreen) StartupWindowPlacement.Apply(this);
+        };
+    }
     private void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
     private void Maximize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
     private void Close_Click(object sender, RoutedEventArgs e) => Close();

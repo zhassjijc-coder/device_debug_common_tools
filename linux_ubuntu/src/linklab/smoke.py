@@ -19,8 +19,9 @@ def run(app, output: Path):
     app.setQuitOnLastWindowClosed(False)
     window = MainWindow(test_mode=True)
     window.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen)
-    window.resize(1440, 1000)
     window.show()
+    # Keep exported verification images deterministic after first-show adaptation.
+    window.resize(1440, 1000)
     findings = []
     failures = []
     app.processEvents()

@@ -103,6 +103,8 @@ See JetBrains' official [interpreter setup](https://www.jetbrains.com/help/pycha
 
 ## Usage notes
 
+On first display, the main window fits and centers within the available area of the screen under the pointer, including its native frame/title bar and accounting for display scaling and small screens. Tray restoration preserves later manual adjustments. On Wayland, the compositor controls window positioning and may ignore centering requests.
+
 - **UI controls**: Dropdowns mark the selected option and show full text on hover. Scrolling over an unfocused dropdown does not change its value. Drag table headers to resize columns; narrow windows scroll within the table, and colored badges distinguish states.
 - **PLC roles**: Use the top dropdown to choose client/monitoring or server/simulated memory. In server mode, set the listening IP and port, start the server, then read or write its memory. Switch back to the client to connect to the same simulator. Role selection starts no communication; switching to the server stops client polling.
 - **Connect PLC**: The client button opens a real connection and verifies S7/FINS handshakes; MC 3E reports TCP connectivity. Connection failures show the endpoint and reason beside the controls. Adjust the timeout and retry if needed. Connecting does not read or write PLC memory. Changing connection parameters releases the old connection; read/write actions can still connect on demand.

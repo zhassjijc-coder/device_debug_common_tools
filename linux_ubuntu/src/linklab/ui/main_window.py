@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
     QLabel, QFrame, QScrollArea, QStackedWidget, QSystemTrayIcon, QMenu, QComboBox, QSpinBox, QLineEdit, QPlainTextEdit, QCheckBox)
 from .common import Page, button, row
 from .theme import stylesheet
+from .window_placement import fit_startup_window
 from .communication_pages import SerialPage, NetworkPage
 from .industrial_pages import MasterPage, SimulatorPage, PlcPage
 from .tools_pages import WorkbenchPage, MonitorPage
@@ -131,9 +132,9 @@ class MainWindow(QMainWindow):
         self.hub = Hub(self)
         self.setWindowTitle(f"{APP_TITLE} · Python Qt {__version__}")
         self.setWindowIcon(graphic("diamond", "#405cf5"))
-        self.setMinimumSize(1000, 680)
-        available = QApplication.primaryScreen().availableGeometry()
-        self.resize(min(1400, available.width()-40), min(900, available.height()-50))
+        self._startup_placed = False
+        self.setMinimumSize(1, 1)
+        self.resize(1400, 900)
         canvas = QWidget()
         canvas.setObjectName("canvas")
         self.setCentralWidget(canvas)
@@ -239,6 +240,12 @@ class MainWindow(QMainWindow):
         self.restore_state()
         self.navigate("home")
         self.statusBar().showMessage("准备就绪 · 连接与发送均由你主动操作")
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        if not self._startup_placed:
+            self._startup_placed = True
+            fit_startup_window(self)
 
     @staticmethod
     def _state_path():
