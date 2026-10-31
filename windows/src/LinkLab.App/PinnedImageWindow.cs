@@ -4,6 +4,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 
 namespace LinkLab.App;
 
@@ -13,6 +14,8 @@ public sealed class PinnedImageWindow : Window
     private readonly Image _picture;
     private readonly TextBlock _zoom;
     private double _scale;
+    private DispatcherOperation? _pendingScale;
+    private bool _closed;
     internal double ImageScale => _scale;
     public PinnedImageWindow(BitmapSource image, Action<BitmapSource> copy, Action<BitmapSource> ocr)
     {
@@ -20,6 +23,9 @@ public sealed class PinnedImageWindow : Window
         Title = "设备联调工具 · 贴图 · 拖动移动 / 滚轮缩放 / Ctrl+滚轮透明度 / 双击或 Esc 关闭";
         WindowStyle = WindowStyle.None; ResizeMode = ResizeMode.NoResize; Topmost = true; ShowInTaskbar = false;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        // Install before assigning content: do not move a live content visual
+        // between the system's fallback and themed Window templates.
+        Template = (ControlTemplate)FindResource("PinnedImageWindowTemplate");
         BorderThickness = new Thickness(1); SetResourceReference(BackgroundProperty, "Card"); SetResourceReference(ForegroundProperty, "Text"); SetResourceReference(BorderBrushProperty, "Line");
         var root = new DockPanel(); root.SetResourceReference(Panel.BackgroundProperty, "Card");
         var toolbar = new StackPanel { Orientation = Orientation.Horizontal, Height = 38 };
@@ -35,7 +41,10 @@ public sealed class PinnedImageWindow : Window
         root.Children.Add(_picture); Content = root;
         SetScale(Math.Min(1, Math.Min(850d / image.PixelWidth, 600d / image.PixelHeight)));
         Loaded += (_, _) => SetScale(_scale);
-        DpiChanged += (_, e) => SetScale(_scale, e.NewDpi);
+        // DPI notifications can arrive while Show is attaching the visual tree.
+        // Resize only after WPF has finished that transition, using its final DPI.
+        DpiChanged += (_, _) => QueueScale();
+        Closed += (_, _) => { _closed = true; _pendingScale?.Abort(); _pendingScale = null; };
         MouseLeftButtonDown += (_, e) => { if (e.ClickCount == 2) Close(); else DragMove(); };
         PreviewMouseWheel += (_, e) =>
         {
@@ -47,9 +56,18 @@ public sealed class PinnedImageWindow : Window
         KeyDown += (_, e) => { if (e.Key == Key.Escape) Close(); };
         ToolTip = Title;
     }
-    private void SetScale(double scale, DpiScale? dpiOverride = null)
+    private void QueueScale()
     {
-        var dpi = dpiOverride ?? VisualTreeHelper.GetDpi(this);
+        if (_closed || _pendingScale?.Status == DispatcherOperationStatus.Pending) return;
+        _pendingScale = Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
+        {
+            _pendingScale = null;
+            if (!_closed && IsLoaded) SetScale(_scale);
+        }));
+    }
+    private void SetScale(double scale)
+    {
+        var dpi = VisualTreeHelper.GetDpi(this);
         var handle = new WindowInteropHelper(this).Handle;
         var screen = handle == IntPtr.Zero ? System.Windows.Forms.Screen.FromPoint(System.Windows.Forms.Cursor.Position) : System.Windows.Forms.Screen.FromHandle(handle);
         double maxWidth = screen.WorkingArea.Width * .9 / dpi.DpiScaleX;
